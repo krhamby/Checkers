@@ -1,19 +1,26 @@
 import pygame
+import settings
 
-import board as b
+from board import Board
 
 pygame.init()
-screen = pygame.display.set_mode((b.WIDTH, b.HEIGHT))
-clock = pygame.time.Clock()
+pygame.display.set_caption("Checkers")
+WINDOW = pygame.display.set_mode((settings.WIDTH, settings.WIDTH))
+CLOCK = pygame.time.Clock()
 running = True
+
+board = Board()
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-    screen.fill("purple")
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse = pygame.mouse.get_pos()
+            board.highlight_square(mouse[0], mouse[1])
+            
+    board.draw(WINDOW)
     pygame.display.flip()
-    clock.tick(60)
+    CLOCK.tick(60)
 
 pygame.quit()
