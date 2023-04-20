@@ -182,8 +182,18 @@ class Board:
             if found:
                  # remove jumped pieces
                 num_jumps = self.get_num_jumps(found[0])
-                for i in range(num_jumps - 1, -1, -1):
-                    found[1][i].piece = None
+                
+                if num_jumps > 0:
+                    first_choice = found[1][0]
+                    index = 0
+                    for i in range(0, len(found[1])):
+                        if (abs(found[1][i].y - self.selected_square.y)) == 1:
+                            if abs(found[0].x - found[1][i].x) < abs(found[0].x - first_choice.x):
+                                first_choice = found[1][i]
+                                index = i
+                    
+                    for i in range(index, index + num_jumps):
+                        found[1][i].piece = None
                     
                 # TODO: add logic for a symmetric choice
                 # NOTE: there are some bugs with this logic
@@ -209,7 +219,6 @@ class Board:
         if self.selected_square == None:
             return 0
         else:
-            print()
             return int(abs(self.selected_square.y - found_square.y) / 2)
             
     
