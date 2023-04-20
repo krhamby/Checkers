@@ -1,5 +1,6 @@
 import pygame
 import settings
+from typing import List, Tuple
 
 from square import Square
 from piece import Piece
@@ -40,7 +41,7 @@ class Board:
             if square.has_piece():
                 square.highlight = True
                 self.selected_square = square
-                self.calculate_possible_moves(currentSquare=self.selected_square)
+                self.calculate_possible_moves(currentSquare=(self.selected_square, list()))
                 for square in self.possible_moves:
                     square.highlight = True
         else:
@@ -54,7 +55,7 @@ class Board:
                 self.possible_moves = []
     
     # the following five methods could definitely be consolidated
-    def calculate_possible_moves(self, currentSquare, justJumped = False):
+    def calculate_possible_moves(self, currentSquare: Tuple[Square, List[Square]] , justJumped = False):
         if not justJumped:
             if targetSquare := self.can_move_up_left(currentSquare):
                 if targetSquare not in self.possible_moves:
@@ -96,7 +97,6 @@ class Board:
             if targetSquare.has_piece() or not jumpedSquare.has_piece():
                 return None
             else:
-                print("Jump left 2: ", targetSquare)
                 return targetSquare
         return None
     
@@ -107,7 +107,6 @@ class Board:
             if targetSquare.has_piece() or not jumpedSquare.has_piece():
                 return None
             else:
-                print("Jump right 2: ", targetSquare)
                 return targetSquare
         return None
     
