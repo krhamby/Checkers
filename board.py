@@ -43,7 +43,7 @@ class Board:
                 self.selected_square = square
                 self.calculate_possible_moves(currentSquare=(self.selected_square, list()))
                 for square in self.possible_moves:
-                    square.highlight = True
+                    square[0].highlight = True
         else:
             if square == self.selected_square:
                 square.highlight = False
@@ -51,7 +51,7 @@ class Board:
                 
                 # reset possible moves
                 for square in self.possible_moves:
-                    square.highlight = False
+                    square[0].highlight = False
                 self.possible_moves = []
     
     # the following five methods could definitely be consolidated
@@ -72,65 +72,79 @@ class Board:
                 self.possible_moves.append(targetSquare)
                 self.calculate_possible_moves(targetSquare, True)
         
-    def can_move_up_left(self, currentSquare):
-        targetSquare = self.get_square_by_index(currentSquare.x - 1, currentSquare.y - 1)
+    def can_move_up_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
+        targetSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y - 1)
         if targetSquare:
             if targetSquare.has_piece():
                 return None
             else:
-                return targetSquare
+                return (targetSquare, currentSquare[1])
         return None
     
-    def can_move_up_right(self, currentSquare):
-        targetSquare = self.get_square_by_index(currentSquare.x + 1, currentSquare.y - 1)
+    def can_move_up_right(self, currentSquare: Tuple[Square, List[Square]]):
+        targetSquare = self.get_square_by_index(currentSquare[0].x + 1, currentSquare[0].y - 1)
         if targetSquare:
             if targetSquare.has_piece():
                 return None
             else:
-                return targetSquare
+                return (targetSquare, currentSquare[1])
         return None
     
-    def can_jump_up_left(self, currentSquare):
-        targetSquare = self.get_square_by_index(currentSquare.x - 2, currentSquare.y - 2)
-        jumpedSquare = self.get_square_by_index(currentSquare.x - 1, currentSquare.y - 1)
+    def can_jump_up_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
+        targetSquare = self.get_square_by_index(currentSquare[0].x - 2, currentSquare[0].y - 2)
+        jumpedSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y - 1)
+        if targetSquare != None and jumpedSquare != None:
+            if targetSquare.has_piece() or not jumpedSquare.has_piece():
+                return None
+            else:
+                currentSquare[1].append(jumpedSquare)
+                return (targetSquare, currentSquare[1]) 
+        return None
+    
+    def can_jump_up_right(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
+        targetSquare = self.get_square_by_index(currentSquare[0].x + 2, currentSquare[0].y - 2)
+        jumpedSquare = self.get_square_by_index(currentSquare[0].x + 1, currentSquare[0].y - 1)
         if targetSquare and jumpedSquare:
             if targetSquare.has_piece() or not jumpedSquare.has_piece():
                 return None
             else:
-                return targetSquare
-        return None
-    
-    def can_jump_up_right(self, currentSquare):
-        targetSquare = self.get_square_by_index(currentSquare.x + 2, currentSquare.y - 2)
-        jumpedSquare = self.get_square_by_index(currentSquare.x + 1, currentSquare.y - 1)
-        if targetSquare and jumpedSquare:
-            if targetSquare.has_piece() or not jumpedSquare.has_piece():
-                return None
-            else:
-                return targetSquare
+                currentSquare[1].append(jumpedSquare)
+                return (targetSquare, currentSquare[1])
         return None
     
     def make_move(self, x, y):
         square = self.get_square(x, y)
-        if self.selected_square != None and square in self.possible_moves:
-            self.selected_square.piece.x = square.top_left_x + settings.SQUARE_SIZE / 2
-            self.selected_square.piece.y = square.top_left_y + settings.SQUARE_SIZE / 2
-            square.piece = self.selected_square.piece
-            self.selected_square.piece = None
-            self.selected_square.highlight = False
-            self.selected_square = None
-            
-            # reset possible moves
-            for square in self.possible_moves:
-                square.highlight = False
-            self.possible_moves = []
+        for s in self.possible_moves:
+            print(s[0])
+        if self.selected_square != None:
+            found = None
+            for s in self.possible_moves:
+                if square == s[0]:
+                    found = s
+                    break
+            if found:
+                self.selected_square.piece.x = square.top_left_x + settings.SQUARE_SIZE / 2
+                self.selected_square.piece.y = square.top_left_y + settings.SQUARE_SIZE / 2
+                square.piece = self.selected_square.piece
+                self.selected_square.piece = None
+                self.selected_square.highlight = False
+                self.selected_square = None
+                
+                # remove jumped pieces
+                for jumpedSquare in found[1]:
+                    jumpedSquare.piece = None
+                
+                # reset possible moves
+                for square in self.possible_moves:
+                    square[0].highlight = False
+                self.possible_moves = []
         
     def get_square(self, x, y):
         x = int(x // settings.SQUARE_SIZE)
         y = int(y // settings.SQUARE_SIZE)
         return self.squares[x + y * settings.SIZE]
     
-    def get_square_by_index(self, x, y):
+    def get_square_by_index(self, x, y) -> Square | None:
         if x < 0 or y < 0 or x >= settings.SIZE or y >= settings.SIZE:
             return None
         return self.squares[x + y * settings.SIZE]
