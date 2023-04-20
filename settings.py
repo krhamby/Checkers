@@ -12,6 +12,7 @@ PIECE_RADIUS = SQUARE_SIZE / 2 * 0.8
 # colors for squares
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
 
 # colors for pieces
 RED = (255, 0, 0)
