@@ -1,4 +1,5 @@
 WIDTH = 720
+FOOTER_HEIGHT = WIDTH * 0.05
 
 # board size
 SIZE = 8

@@ -2,18 +2,19 @@ import pygame
 import settings
 
 from board import Board
+from footer import Footer
 
 pygame.init()
 pygame.display.set_caption("Checkers")
-WINDOW = pygame.display.set_mode((settings.WIDTH, settings.WIDTH))
+WINDOW = pygame.display.set_mode((settings.WIDTH, settings.WIDTH + settings.FOOTER_HEIGHT))
 CLOCK = pygame.time.Clock()
 running = True
 
 board = Board()
+footer = Footer()
 
 while running:
     for event in pygame.event.get():
-        # print(event)
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -23,7 +24,7 @@ while running:
             if board.selected_square != None:
                 board.make_move(mouse[0], mouse[1])
         
-        
+    footer.draw(WINDOW, board.current_player)
     board.draw(WINDOW)
     pygame.display.flip()
     CLOCK.tick(60)
