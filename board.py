@@ -44,7 +44,7 @@ class Board:
             if square.has_piece() and square.piece.color == self.current_player:
                 square.highlight = True
                 self.selected_square = square
-                self.calculate_possible_moves(currentSquare=(self.selected_square, list()))
+                self.calculate_possible_moves(currentSquare=(self.selected_square, self.selected_square))
                 for square in self.possible_moves:
                     square[0].highlight = True
         else:
@@ -58,118 +58,45 @@ class Board:
                 self.possible_moves = []
     
     # the following five methods could definitely be consolidated
-    def calculate_possible_moves(self, currentSquare: Tuple[Square, List[Square]]):
-        
-        # TODO: remove recursion and just call each method once
+    def calculate_possible_moves(self, currentSquare: Tuple[Square, Square]):
         if self.current_player == settings.TAN:
-            if not self.just_jumped:
-                if targetSquare := self.can_move_up_left(currentSquare):
-                    if targetSquare not in self.possible_moves:
-                        self.possible_moves.append(targetSquare)
-                if targetSquare := self.can_move_up_right(currentSquare):
-                    if targetSquare not in self.possible_moves:
-                        self.possible_moves.append(targetSquare)
-            if targetSquare := self.can_jump_up_left(currentSquare):
-                if targetSquare not in self.possible_moves:
-                    self.possible_moves.append(targetSquare)
-            if targetSquare := self.can_jump_up_right(currentSquare):
-                if targetSquare not in self.possible_moves:
-                    self.possible_moves.append(targetSquare)
+            self.add_moves_up(currentSquare)
         else:
-            if not self.just_jumped:
-                if targetSquare := self.can_move_down_left(currentSquare):
-                    if targetSquare not in self.possible_moves:
-                        self.possible_moves.append(targetSquare)
-                if targetSquare := self.can_move_down_right(currentSquare):
-                    if targetSquare not in self.possible_moves:
-                        self.possible_moves.append(targetSquare)
-            if targetSquare := self.can_jump_down_left(currentSquare):
-                if targetSquare not in self.possible_moves:
-                    self.possible_moves.append(targetSquare)
-            if targetSquare := self.can_jump_down_right(currentSquare):
-                if targetSquare not in self.possible_moves:
-                    self.possible_moves.append(targetSquare)
+            self.add_moves_down(currentSquare)
+    
+    
+    def add_moves_up(self, currentSquare: Tuple[Square, Square]):
+        if not self.just_jumped:
+            for i in range(-1, 2, 2):
+                targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y - 1)
+                if targetSquare:
+                    if not targetSquare.has_piece() and targetSquare not in self.possible_moves:
+                        self.possible_moves.append((targetSquare, targetSquare))
         
-        
-    def can_move_up_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
-        targetSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y - 1)
-        if targetSquare:
-            if targetSquare.has_piece():
-                return None
-            else:
-                return (targetSquare, currentSquare[1])
-        return None
-    
-    def can_move_down_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
-        targetSquare = self.get_square_by_index(currentSquare[0].x + 1, currentSquare[0].y + 1)
-        if targetSquare:
-            if targetSquare.has_piece():
-                return None
-            else:
-                return (targetSquare, currentSquare[1])
-        return None
-    
-    def can_move_up_right(self, currentSquare: Tuple[Square, List[Square]]):
-        targetSquare = self.get_square_by_index(currentSquare[0].x + 1, currentSquare[0].y - 1)
-        if targetSquare:
-            if targetSquare.has_piece():
-                return None
-            else:
-                return (targetSquare, currentSquare[1])
-        return None
-    
-    def can_move_down_right(self, currentSquare: Tuple[Square, List[Square]]):
-        targetSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y + 1)
-        if targetSquare:
-            if targetSquare.has_piece():
-                return None
-            else:
-                return (targetSquare, currentSquare[1])
-        return None
-    
-    def can_jump_up_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
-        targetSquare = self.get_square_by_index(currentSquare[0].x - 2, currentSquare[0].y - 2)
-        jumpedSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y - 1)
-        if targetSquare != None and jumpedSquare != None:
-            if targetSquare.has_piece() or not jumpedSquare.has_piece():
-                return None
-            elif jumpedSquare.piece.color != self.current_player:
-                currentSquare[1].append(jumpedSquare)
-                return (targetSquare, currentSquare[1]) 
-        return None
-    
-    def can_jump_down_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
-        targetSquare = self.get_square_by_index(currentSquare[0].x + 2, currentSquare[0].y + 2)
-        jumpedSquare = self.get_square_by_index(currentSquare[0].x + 1, currentSquare[0].y + 1)
-        if targetSquare and jumpedSquare:
-            if targetSquare.has_piece() or not jumpedSquare.has_piece():
-                return None
-            elif jumpedSquare.piece.color != self.current_player:
-                currentSquare[1].append(jumpedSquare)
-                return (targetSquare, currentSquare[1])
-        return None
-    
-    def can_jump_up_right(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
-        targetSquare = self.get_square_by_index(currentSquare[0].x + 2, currentSquare[0].y - 2)
-        jumpedSquare = self.get_square_by_index(currentSquare[0].x + 1, currentSquare[0].y - 1)
-        if targetSquare and jumpedSquare:
-            if targetSquare.has_piece() or not jumpedSquare.has_piece():
-                return None
-            elif jumpedSquare.piece.color != self.current_player:
-                currentSquare[1].append(jumpedSquare)
-                return (targetSquare, currentSquare[1])
-        return None
-    
-    def can_jump_down_right(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
-        targetSquare = self.get_square_by_index(currentSquare[0].x - 2, currentSquare[0].y + 2)
-        jumpedSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y + 1)
-        if targetSquare and jumpedSquare:
-            if targetSquare.has_piece() or not jumpedSquare.has_piece():
-                return None
-            elif jumpedSquare.piece.color != self.current_player:
-                currentSquare[1].append(jumpedSquare)
-                return (targetSquare, currentSquare[1])
-        return None
+        for i in range(-2, 3, 4):
+            targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y - 2)
+            jumpedSquare = self.get_square_by_index(currentSquare[0].x + i // 2, currentSquare[0].y - 1)
+            if targetSquare and jumpedSquare:
+                if (jumpedSquare.has_piece() and not targetSquare.has_piece() 
+                    and jumpedSquare.piece.color != self.current_player and targetSquare not in self.possible_moves):
+                    self.possible_moves.append((targetSquare, jumpedSquare))
+                    
+    def add_moves_down(self, currentSquare: Tuple[Square, Square]):
+        if not self.just_jumped:
+            for i in range(-1, 2, 2):
+                targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y + 1)
+                if targetSquare:
+                    if not targetSquare.has_piece() and targetSquare not in self.possible_moves:
+                        self.possible_moves.append((targetSquare, targetSquare))
+
+        for i in range(-2, 3, 4):
+            targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y + 2)
+            jumpedSquare = self.get_square_by_index(currentSquare[0].x + i // 2, currentSquare[0].y + 1)
+            if targetSquare and jumpedSquare:
+                if (jumpedSquare.has_piece() and not targetSquare.has_piece() 
+                    and jumpedSquare.piece.color != self.current_player and targetSquare not in self.possible_moves):
+                    self.possible_moves.append((targetSquare, jumpedSquare))
+            
     
     def make_move(self, x, y):
         square = self.get_square(x, y)
@@ -180,23 +107,9 @@ class Board:
                     found = s
                     break
             if found:
-                ### this chunk works, but could be refined
-                # remove jumped pieces
-                num_jumps = self.get_num_jumps(found[0])
-                
-                if num_jumps > 0:
-                    first_choice = found[1][0]
-                    index = 0
+                if found[0] != found[1]:
                     self.just_jumped = True
-                    for i in range(0, len(found[1])):
-                        if (abs(found[1][i].y - self.selected_square.y)) == 1:
-                            if abs(found[0].x - found[1][i].x) < abs(found[0].x - first_choice.x):
-                                first_choice = found[1][i]
-                                index = i
-                    
-                    for i in range(index, index + num_jumps):
-                        found[1][i].piece = None
-                ### end of chunk
+                    found[1].piece = None
                 
                 self.selected_square.piece.x = square.top_left_x + settings.SQUARE_SIZE / 2
                 self.selected_square.piece.y = square.top_left_y + settings.SQUARE_SIZE / 2
@@ -211,7 +124,7 @@ class Board:
                 self.possible_moves = []
                 
                 if self.just_jumped:
-                    self.calculate_possible_moves(currentSquare=(square, []))
+                    self.calculate_possible_moves(currentSquare=(square, square))
                     if len(self.possible_moves) > 0:
                         self.possible_moves = []
                         self.select_square(square.top_left_x + settings.SQUARE_SIZE / 2, square.top_left_y + settings.SQUARE_SIZE / 2)
@@ -221,13 +134,6 @@ class Board:
                 
                 # change player
                 self.current_player = settings.RED if self.current_player == settings.TAN else settings.TAN
-    
-    def get_num_jumps(self, found_square: Square) -> int:
-        if self.selected_square == None:
-            return 0
-        else:
-            return int(abs(self.selected_square.y - found_square.y) / 2)
-            
     
     def get_square(self, x, y):
         x = int(x // settings.SQUARE_SIZE)
