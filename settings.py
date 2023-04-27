@@ -1,5 +1,15 @@
+from enum import Enum
+
 WIDTH = 720
 FOOTER_HEIGHT = WIDTH * 0.05
+
+# game mode
+class GameMode(Enum):
+    SINGLE_PLAYER_AI = 1
+    TWO_PLAYER_AI = 2
+    TWO_PLAYER = 3
+
+GAME_MODE = GameMode.TWO_PLAYER
 
 # board size
 SIZE = 8
