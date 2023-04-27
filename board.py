@@ -61,8 +61,12 @@ class Board:
     def calculate_possible_moves(self, currentSquare: Tuple[Square, Square]):
         if self.current_player == settings.TAN:
             self.add_moves_up(currentSquare)
+            if currentSquare[0].piece.king:
+                self.add_moves_down(currentSquare)
         else:
             self.add_moves_down(currentSquare)
+            if currentSquare[0].piece.king:
+                self.add_moves_up(currentSquare)
     
     
     def add_moves_up(self, currentSquare: Tuple[Square, Square]):
@@ -117,6 +121,12 @@ class Board:
                 self.selected_square.piece = None
                 self.selected_square.highlight = False
                 self.selected_square = None
+                
+                # make king if in end row
+                if self.current_player == settings.TAN and square.y == 0:
+                    square.piece.king = True
+                elif self.current_player == settings.RED and square.y == settings.SIZE - 1:
+                    square.piece.king = True
                 
                 # reset possible moves
                 for possible_move in self.possible_moves:
