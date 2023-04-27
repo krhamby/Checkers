@@ -11,6 +11,7 @@ class Board:
         self.possible_moves = []
         
         self.current_player = settings.TAN
+        self.just_jumped = False
         
         for y in range(settings.SIZE):
             for x in range(settings.SIZE):
@@ -57,9 +58,11 @@ class Board:
                 self.possible_moves = []
     
     # the following five methods could definitely be consolidated
-    def calculate_possible_moves(self, currentSquare: Tuple[Square, List[Square]] , justJumped = False):
+    def calculate_possible_moves(self, currentSquare: Tuple[Square, List[Square]]):
+        
+        # TODO: remove recursion and just call each method once
         if self.current_player == settings.TAN:
-            if not justJumped:
+            if not self.just_jumped:
                 if targetSquare := self.can_move_up_left(currentSquare):
                     if targetSquare not in self.possible_moves:
                         self.possible_moves.append(targetSquare)
@@ -69,13 +72,11 @@ class Board:
             if targetSquare := self.can_jump_up_left(currentSquare):
                 if targetSquare not in self.possible_moves:
                     self.possible_moves.append(targetSquare)
-                    self.calculate_possible_moves(targetSquare, True)
             if targetSquare := self.can_jump_up_right(currentSquare):
                 if targetSquare not in self.possible_moves:
                     self.possible_moves.append(targetSquare)
-                    self.calculate_possible_moves(targetSquare, True)
         else:
-            if not justJumped:
+            if not self.just_jumped:
                 if targetSquare := self.can_move_down_left(currentSquare):
                     if targetSquare not in self.possible_moves:
                         self.possible_moves.append(targetSquare)
@@ -85,11 +86,10 @@ class Board:
             if targetSquare := self.can_jump_down_left(currentSquare):
                 if targetSquare not in self.possible_moves:
                     self.possible_moves.append(targetSquare)
-                    self.calculate_possible_moves(targetSquare, True)
             if targetSquare := self.can_jump_down_right(currentSquare):
                 if targetSquare not in self.possible_moves:
                     self.possible_moves.append(targetSquare)
-                    self.calculate_possible_moves(targetSquare, True)
+        
         
     def can_move_up_left(self, currentSquare: Tuple[Square, List[Square]]) -> Tuple[Square, List[Square]] | None:
         targetSquare = self.get_square_by_index(currentSquare[0].x - 1, currentSquare[0].y - 1)
@@ -180,12 +180,14 @@ class Board:
                     found = s
                     break
             if found:
-                 # remove jumped pieces
+                ### this chunk works, but could be refined
+                # remove jumped pieces
                 num_jumps = self.get_num_jumps(found[0])
                 
                 if num_jumps > 0:
                     first_choice = found[1][0]
                     index = 0
+                    self.just_jumped = True
                     for i in range(0, len(found[1])):
                         if (abs(found[1][i].y - self.selected_square.y)) == 1:
                             if abs(found[0].x - found[1][i].x) < abs(found[0].x - first_choice.x):
@@ -194,11 +196,7 @@ class Board:
                     
                     for i in range(index, index + num_jumps):
                         found[1][i].piece = None
-                    
-                # TODO: add logic for a symmetric choice
-                # NOTE: there are some bugs with this logic
-                # what will happen when a king can jump every direction?
-                # I think refining the recursive logic will fix this (maybe)
+                ### end of chunk
                 
                 self.selected_square.piece.x = square.top_left_x + settings.SQUARE_SIZE / 2
                 self.selected_square.piece.y = square.top_left_y + settings.SQUARE_SIZE / 2
@@ -208,9 +206,18 @@ class Board:
                 self.selected_square = None
                 
                 # reset possible moves
-                for square in self.possible_moves:
-                    square[0].highlight = False
+                for possible_move in self.possible_moves:
+                    possible_move[0].highlight = False
                 self.possible_moves = []
+                
+                if self.just_jumped:
+                    self.calculate_possible_moves(currentSquare=(square, []))
+                    if len(self.possible_moves) > 0:
+                        self.possible_moves = []
+                        self.select_square(square.top_left_x + settings.SQUARE_SIZE / 2, square.top_left_y + settings.SQUARE_SIZE / 2)
+                        return
+                    else:
+                        self.just_jumped = False
                 
                 # change player
                 self.current_player = settings.RED if self.current_player == settings.TAN else settings.TAN

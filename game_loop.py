@@ -19,7 +19,8 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse = pygame.mouse.get_pos()
-            board.select_square(mouse[0], mouse[1])
+            if not board.just_jumped:
+                board.select_square(mouse[0], mouse[1])
             
             if board.selected_square != None:
                 board.make_move(mouse[0], mouse[1])
