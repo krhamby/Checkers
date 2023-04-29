@@ -9,8 +9,7 @@ class GameMode(Enum):
     TWO_PLAYER_AI = 2
     TWO_PLAYER = 3
 
-GAME_MODE = GameMode.TWO_PLAYER
-
+GAME_MODE = GameMode.SINGLE_PLAYER_AI
 # board size
 SIZE = 8
 

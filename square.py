@@ -13,6 +13,14 @@ class Square:
         
     def __str__(self) -> str:
         return f"Square: ({self.x}, {self.y})"
+
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, Square):
+            return self.x == o.x and self.y == o.y
+        return False
+    
+    def deep_copy(self):
+        return Square(self.top_left_x, self.top_left_y, self.x, self.y, self.color, self.piece.deep_copy() if self.piece != None else None, self.highlight)
     
     def copy(self):
         return Square(self.top_left_x, self.top_left_y, self.x, self.y, self.color, self.piece, self.highlight)
