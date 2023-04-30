@@ -23,6 +23,8 @@ class Board:
         
         self.heuristic: float = -inf
         
+        self.force = False
+        
         for y in range(settings.SIZE):
             for x in range(settings.SIZE):
                 if (y + x) % 2 == 0:
@@ -97,9 +99,10 @@ class Board:
     def get_all_possible_moves(self):
         for square in self.squares:
             if square.has_piece() and square.piece.color == self.current_player:
+                self.force = False
                 self.calculate_possible_moves(currentSquare=(square, square, square))
                 
-    def force_capture(self, ai = False):
+    def force_capture(self):
         temp = []
         for move in self.possible_moves:
             temp.append(move)
@@ -118,13 +121,14 @@ class Board:
         
         return (False, None, None)  
 
-    def select_square(self, x = None, y = None, square = None):
+    def select_square(self, x = None, y = None, square = None, force = False):
         if square == None:
             square = self.get_square(x, y)
         if self.selected_square == None:
             if square.has_piece() and square.piece.color == self.current_player:
                 square.highlight = True
                 self.selected_square = square
+                self.force = force
                 self.calculate_possible_moves(currentSquare=(self.selected_square, self.selected_square, self.selected_square))
                 for square in self.possible_moves:
                     square[0].highlight = True
@@ -157,8 +161,9 @@ class Board:
                 if (jumpedSquare.has_piece() and not targetSquare.has_piece() 
                     and jumpedSquare.piece.color != self.current_player and targetSquare not in self.possible_moves):
                     self.possible_moves.append((targetSquare, jumpedSquare, currentSquare[2]))
+                    self.force = True
         
-        if not self.just_jumped and self.possible_moves == []:
+        if not self.just_jumped and not self.force:
             for i in range(-1, 2, 2):
                 targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y - 1)
                 if targetSquare:
@@ -174,8 +179,9 @@ class Board:
                 if (jumpedSquare.has_piece() and not targetSquare.has_piece() 
                     and jumpedSquare.piece.color != self.current_player and targetSquare not in self.possible_moves):
                     self.possible_moves.append((targetSquare, jumpedSquare, currentSquare[2]))
+                    self.force = True
         
-        if not self.just_jumped and self.possible_moves == []:
+        if not self.just_jumped and not self.force:
             for i in range(-1, 2, 2):
                 targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y + 1)
                 if targetSquare:

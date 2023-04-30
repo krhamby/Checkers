@@ -53,7 +53,8 @@ while running:
                 if board.selected_square == None: 
                     fc = board.force_capture()
                 if fc[0] and fc[1] != None and board.selected_square == None:
-                    board.select_square(fc[1].top_left_x, fc[1].top_left_y)
+                    board.possible_moves = []
+                    board.select_square(fc[1].top_left_x, fc[1].top_left_y, force=True)
                     
                     # if board.selected_square != None:
                     #     board.player_make_move(mouse[0], mouse[1])
@@ -72,9 +73,10 @@ while running:
                     board.selected_square = None
                     board.possible_moves = []
                 else:
-                    print("there")
                     board.heuristic = -inf
                     output = ai_2.minimax(board, 5, -inf, inf, True)
+                    
+                    print(output[0])
                     
                     if board != output[1]:
                         print("AI made a move")
@@ -96,12 +98,11 @@ while running:
                     board.ai_make_move(initial_x_coord=fc[1].top_left_x, initial_y_coord=fc[1].top_left_y,
                                         target_x_index=fc[2].x, target_y_index=fc[2].y)
                 else:
-                    print("here")
                     board.heuristic = -inf
                     output = ai.minimax(board, 5, -inf, inf, True)
                     
                     if board != output[1]:
-                        print("AI made a move")
+                        print("AI1 made a move")
                         print(output[0])
                     
                     board = output[1]
@@ -113,12 +114,11 @@ while running:
                     board.ai_make_move(initial_x_coord=fc[1].top_left_x, initial_y_coord=fc[1].top_left_y,
                                         target_x_index=fc[2].x, target_y_index=fc[2].y)
                 else:
-                    print("there")
                     board.heuristic = -inf
                     output = ai_2.minimax(board, 5, -inf, inf, True)
                     
                     if board != output[1]:
-                        print("AI made a move")
+                        print("AI2 made a move")
                         
                     board = output[1]
                 
