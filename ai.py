@@ -57,9 +57,9 @@ class AI:
     def minimax(self, state: Board, depth: int, alpha, beta, max_player: bool):
         if depth == 0:
             # base case
-            h = state.get_heuristic()
+            h = state.get_heuristic(color=self.color)
             state.heuristic = h
-            return (state.get_heuristic(), state)
+            return (h, state)
         if max_player:
             max_heuristic = -inf
             best_state = state

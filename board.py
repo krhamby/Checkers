@@ -76,25 +76,34 @@ class Board:
         
         return board_copy
     
-    def get_heuristic(self) -> float:
+    def get_heuristic(self, color) -> float:
         # do calculations here based on board
         num_pieces = 0
         num_opponent_pieces = 0
         num_kings = 0
         num_opponent_kings = 0
         
+        num_center = 0
+        num_opponent_center = 0
+        
         for square in self.squares:
             if square.has_piece():
-                if square.piece.color == self.current_player:
+                if square.piece.color == color:
                     if square.piece.king:
                         num_kings += 1
                     num_pieces += 1
+                    
+                    if square.x >= 1 and square.x <= settings.SIZE - 2 and square.y >= 1 and square.y <= settings.SIZE - 2:
+                        num_center += 1
                 else:
                     if square.piece.king:
                         num_opponent_kings += 1
                     num_opponent_pieces += 1
+                    
+                    if square.x >= 1 and square.x <= settings.SIZE - 2 and square.y >= 1 and square.y <= settings.SIZE - 2:
+                        num_opponent_center += 1
         
-        return num_pieces * 1.5 + num_kings * 4 - num_opponent_pieces * 2 - num_opponent_kings * 3
+        return num_pieces * 2 + num_kings * 4 + num_center * 3 - num_opponent_pieces * 1.5 - num_opponent_kings * 5 - num_opponent_center * 3
     
     def get_all_possible_moves(self):
         for square in self.squares:
