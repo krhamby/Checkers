@@ -103,7 +103,7 @@ class Board:
                     if square.x >= 1 and square.x <= settings.SIZE - 2 and square.y >= 1 and square.y <= settings.SIZE - 2:
                         num_opponent_center += 1
         
-        return num_pieces * 2 + num_kings * 4 + num_center * 3 - num_opponent_pieces * 1.5 - num_opponent_kings * 5 - num_opponent_center * 3
+        return num_pieces * 2 + num_kings * 4 + num_center * 3.5 - num_opponent_pieces * 1.5 - num_opponent_kings * 5 - num_opponent_center * 3
     
     def get_all_possible_moves(self):
         for square in self.squares:
