@@ -74,7 +74,7 @@ while running:
                     board.possible_moves = []
                 else:
                     board.heuristic = -inf
-                    output = ai_2.minimax(board, 5, -inf, inf, True)
+                    output = ai_2.minimax(board, settings.PLY, -inf, inf, True)
                     
                     print(output[0])
                     
@@ -89,9 +89,6 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         else:
-            # graph = Node(board)
-            # ai.generate_graph(6, board, graph)
-            # board = graph.children[0].children[0].children[0].state
             if turn:
                 fc = board.force_capture()
                 if fc[0] and fc[1] != None and fc[2] != None:
@@ -99,7 +96,7 @@ while running:
                                         target_x_index=fc[2].x, target_y_index=fc[2].y)
                 else:
                     board.heuristic = -inf
-                    output = ai.minimax(board, 5, -inf, inf, True)
+                    output = ai.minimax(board, settings.PLY, -inf, inf, True)
                     
                     if board != output[1]:
                         print("AI1 made a move")
@@ -115,7 +112,7 @@ while running:
                                         target_x_index=fc[2].x, target_y_index=fc[2].y)
                 else:
                     board.heuristic = -inf
-                    output = ai_2.minimax(board, 5, -inf, inf, True)
+                    output = ai_2.minimax(board, settings.PLY, -inf, inf, True)
                     
                     if board != output[1]:
                         print("AI2 made a move")
