@@ -76,6 +76,12 @@ class Board:
         
         return board_copy
     
+    def game_over(self) -> bool:
+        for square in self.squares:
+            if square.has_piece() and square.piece.color == self.current_player:
+                return False
+        return True
+    
     def get_heuristic(self, color) -> float:
         # do calculations here based on board
         num_pieces = 0
@@ -86,6 +92,11 @@ class Board:
         num_center = 0
         num_opponent_center = 0
         
+        num_king_center = 0
+        num_opponent_king_center = 0
+        
+        num_opponent_king_row = 0
+        
         for square in self.squares:
             if square.has_piece():
                 if square.piece.color == color:
@@ -95,6 +106,8 @@ class Board:
                     
                     if square.x >= 1 and square.x <= settings.SIZE - 2 and square.y >= 1 and square.y <= settings.SIZE - 2:
                         num_center += 1
+                        if square.piece.king:
+                            num_king_center += 1
                 else:
                     if square.piece.king:
                         num_opponent_kings += 1
@@ -102,8 +115,30 @@ class Board:
                     
                     if square.x >= 1 and square.x <= settings.SIZE - 2 and square.y >= 1 and square.y <= settings.SIZE - 2:
                         num_opponent_center += 1
+                        if square.piece.king:
+                            num_opponent_king_center += 1
+                    
+                    if (square.y == 1 and square.piece.color == settings.TAN) or (square.y == settings.SIZE - 2 and square.piece.color == settings.RED):
+                        num_opponent_king_row += 1
+                        
+        if num_pieces < 5 and num_opponent_pieces < 5:
+            return num_opponent_pieces - num_pieces * 3
         
-        return num_pieces * 2 + num_kings * 4 + num_center * 3.5 - num_opponent_pieces * 1.5 - num_opponent_kings * 5 - num_opponent_center * 3
+        heuristic = 0
+        heuristic += num_pieces * 2
+        heuristic += num_kings * 4
+        heuristic += num_center * 3.5
+        heuristic += num_king_center * 3
+        
+        heuristic -= num_opponent_pieces * 2
+        heuristic -= num_opponent_kings * 5
+        heuristic -= num_opponent_center * 3.5
+        heuristic -= num_opponent_king_center * 2
+        heuristic -= num_opponent_king_row * 3
+        
+        # num_pieces * 2 + num_kings * 5 + num_center * 3.5 - num_opponent_pieces * 1.5 - num_opponent_kings * 5 - num_opponent_center * 3
+        
+        return heuristic
     
     def get_all_possible_moves(self):
         for square in self.squares:
@@ -111,30 +146,41 @@ class Board:
                 self.force = False
                 self.calculate_possible_moves(currentSquare=(square, square, square))
                 
-    def force_capture(self):
+    def force_capture(self) -> List[Tuple[bool, Square, Square]]:
         temp = []
         for move in self.possible_moves:
             temp.append(move)
         
+        force_moves = []
         for square in self.squares:
             if square.has_piece() and square.piece.color == self.current_player:
                 self.calculate_possible_moves(currentSquare=(square, square, square))
                 for move in self.possible_moves:
                     if move[0] != move[1]:
-                        # self.possible_moves = []
-                        # self.select_square(square=move[2])
-                        # print("Forced capture")
-                        return (True, move[2], move[0])
+                        force_moves.append((True, move[2], move[0]))
                 self.possible_moves = []
         self.possible_moves = temp
         
-        return (False, None, None)  
+        if len(force_moves) > 0:
+            return force_moves
+        
+        return []
 
-    def select_square(self, x = None, y = None, square = None, force = False):
+    def select_square(self, x = None, y = None, square = None, force = False, force_moves = []):
         if square == None:
             square = self.get_square(x, y)
         if self.selected_square == None:
-            if square.has_piece() and square.piece.color == self.current_player:
+            if force_moves != []:
+                for move in force_moves:
+                    if move[1] == square:
+                        self.selected_square = square
+                        self.selected_square.highlight = True
+                        self.force = True
+                        self.calculate_possible_moves(currentSquare=(self.selected_square, self.selected_square, self.selected_square))
+                        for s in self.possible_moves:
+                            s[0].highlight = True
+                        break
+            elif square.has_piece() and square.piece.color == self.current_player:
                 square.highlight = True
                 self.selected_square = square
                 self.force = force
@@ -270,9 +316,13 @@ class Board:
                     # change player
                     self.current_player = settings.RED if self.current_player == settings.TAN else settings.TAN     
                     
-    def ai_make_move(self, initial_x_coord, initial_y_coord, target_x_index, target_y_index):
+    def ai_make_move(self, initial_x_coord, initial_y_coord, target_x_index, target_y_index, force_moves = []):
         self.selected_square = None
-        self.select_square(x=initial_x_coord, y=initial_y_coord)
+        
+        if force_moves != []:
+            self.select_square(x=initial_x_coord, y=initial_y_coord, force_moves=force_moves)
+        else:
+            self.select_square(x=initial_x_coord, y=initial_y_coord)
         target = self.get_square_by_index(target_x_index, target_y_index)
         
         if target and self.selected_square:

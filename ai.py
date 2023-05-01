@@ -2,15 +2,8 @@ from node import Node
 from board import Board
 
 from math import inf
+import random
 
-# for debugging
-# import pygame
-# import settings
-# from time import sleep
-
-# pygame.init()
-# WINDOW  = pygame.display.set_mode((settings.WIDTH, settings.WIDTH + settings.FOOTER_HEIGHT))
-# CLOCK = pygame.time.Clock()
 class AI:    
     def __init__(self, color):
         self.color = color
@@ -25,10 +18,6 @@ class AI:
                     
                     state = startingState.deep_copy()
                     state.select_square(x=s.top_left_x, y=s.top_left_y)
-                    
-                    # make_move is tailored for a human player, so we will manually set the selected square and calculate possible moves
-                    # startingState.selected_square = s
-                    # startingState.calculate_possible_moves(currentSquare=(startingState.selected_square, startingState.selected_square))
                     
                     for move in state.possible_moves:
                         temp = state.deep_copy()
@@ -50,10 +39,6 @@ class AI:
                         
                         self.generate_graph(depth - 1, temp, parent=node)
                         
-                    # since we do not make a move in the original board, we need to reset some things
-                    # startingState.selected_square = None
-                    # startingState.possible_moves = []
-                    
     def minimax(self, state: Board, depth: int, alpha, beta, max_player: bool):
         if depth == 0:
             # base case
@@ -63,41 +48,77 @@ class AI:
         if max_player:
             max_heuristic = -inf
             best_state = state
-           
-            state.get_all_possible_moves()
-            for move in state.possible_moves:
-                child_state = state.deep_copy()
-                child_state.ai_make_move(initial_x_coord=move[2].top_left_x, initial_y_coord=move[2].top_left_y, 
-                                         target_x_index=move[0].x, target_y_index=move[0].y)
-                
-                heuristic = self.minimax(child_state, depth - 1, alpha, beta, False)
-                max_heuristic = max(max_heuristic, heuristic[0])
-                best_state = max(best_state, heuristic[1], key=lambda x: x.heuristic)
-                
-                alpha = max(alpha, heuristic[0])
-                if beta <= alpha:
-                    # get pruned
-                    break
+            
+            fc = state.force_capture()
+            if len(fc) > 0:
+                for forced_move in fc:
+                    child_state = state.deep_copy()
+                    
+                    child_state.possible_moves = []
+                    child_state.ai_make_move(initial_x_coord=forced_move[1].top_left_x, initial_y_coord=forced_move[1].top_left_y,
+                                                target_x_index=forced_move[2].x, target_y_index=forced_move[2].y, force_moves=fc)
+                    
+                    heuristic = self.minimax(child_state, depth - 1, alpha, beta, False)
+                    max_heuristic = max(max_heuristic, heuristic[0])
+                    best_state = max(best_state, heuristic[1], key=lambda x: x.heuristic)
+                    
+                    alpha = max(alpha, heuristic[0])
+                    if beta <= alpha:
+                        # get pruned
+                        break
+            else:
+                state.get_all_possible_moves()
+                for move in state.possible_moves:
+                    child_state = state.deep_copy()
+                    child_state.ai_make_move(initial_x_coord=move[2].top_left_x, initial_y_coord=move[2].top_left_y, 
+                                            target_x_index=move[0].x, target_y_index=move[0].y)
+                    
+                    heuristic = self.minimax(child_state, depth - 1, alpha, beta, False)
+                    max_heuristic = max(max_heuristic, heuristic[0])
+                    best_state = max(best_state, heuristic[1], key=lambda x: x.heuristic)
+                    
+                    alpha = max(alpha, heuristic[0])
+                    if beta <= alpha:
+                        # get pruned
+                        break
             best_state.heuristic = max_heuristic
             return (max_heuristic, best_state)
         else:
             min_heuristic = inf
             best_state = state
             
-            state.get_all_possible_moves()
-            for move in state.possible_moves:
-                child_state = state.deep_copy()
-                child_state.ai_make_move(initial_x_coord=move[2].top_left_x, initial_y_coord=move[2].top_left_y,
-                                         target_x_index=move[0].x, target_y_index=move[0].y)
-                
-                heuristic = self.minimax(child_state, depth - 1, alpha, beta, True)
-                min_heuristic = min(min_heuristic, heuristic[0])
-                best_state = min(best_state, heuristic[1], key=lambda x: x.heuristic)
-                
-                beta = min(beta, heuristic[0])
-                if beta <= alpha:
-                    # get pruned
-                    break
+            fc = state.force_capture()
+            if len(fc) > 0:
+                for forced_move in fc:
+                    child_state = state.deep_copy()
+                    
+                    child_state.possible_moves = []
+                    child_state.ai_make_move(initial_x_coord=forced_move[1].top_left_x, initial_y_coord=forced_move[1].top_left_y,
+                                                target_x_index=forced_move[2].x, target_y_index=forced_move[2].y, force_moves=fc)
+                    
+                    heuristic = self.minimax(child_state, depth - 1, alpha, beta, True)
+                    min_heuristic = min(min_heuristic, heuristic[0])
+                    best_state = min(best_state, heuristic[1], key=lambda x: x.heuristic)
+                    
+                    beta = min(beta, heuristic[0])
+                    if beta <= alpha:
+                        # get pruned
+                        break
+            else:
+                state.get_all_possible_moves()
+                for move in state.possible_moves:
+                    child_state = state.deep_copy()
+                    child_state.ai_make_move(initial_x_coord=move[2].top_left_x, initial_y_coord=move[2].top_left_y,
+                                            target_x_index=move[0].x, target_y_index=move[0].y)
+                    
+                    heuristic = self.minimax(child_state, depth - 1, alpha, beta, True)
+                    min_heuristic = min(min_heuristic, heuristic[0])
+                    best_state = min(best_state, heuristic[1], key=lambda x: x.heuristic)
+                    
+                    beta = min(beta, heuristic[0])
+                    if beta <= alpha:
+                        # get pruned
+                        break
             best_state.heuristic = min_heuristic
             return (min_heuristic, best_state)
     
