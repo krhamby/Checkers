@@ -76,10 +76,19 @@ class Board:
         
         return board_copy
     
-    def game_over(self) -> bool:
+    def game_over(self) -> bool:    
+        one = self.one_piece_left(self.current_player)    
+        
         for square in self.squares:
             if square.has_piece() and square.piece.color == self.current_player:
-                return False
+                if one:
+                    self.calculate_possible_moves(currentSquare=(square, square, square))
+                    if len(self.possible_moves) > 0:
+                        self.possible_moves = []
+                        return False
+                else:
+                    return False
+            
         return True
     
     def one_piece_left(self, color) -> bool:
