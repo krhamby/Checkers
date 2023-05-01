@@ -9,6 +9,13 @@ class AI:
         self.color = color
     
     def generate_graph(self, depth: int, startingState: Board, parent: Node):
+        """
+        Deprecated method for generating a graph of possible moves. This was the foundation for 
+        our minimax algorith. We left it in for fun.
+        
+        Returns:
+            a Node object representing the starting state of the board.
+        """
         if depth == 0:
             # base case
             return Node(startingState, parent=parent, children=[])
@@ -40,6 +47,16 @@ class AI:
                         self.generate_graph(depth - 1, temp, parent=node)
                         
     def minimax(self, state: Board, depth: int, alpha, beta, max_player: bool):
+        """
+        Recursive minimax algorithm with alpha-beta pruning.
+        
+        Args:
+            state: the current state of the board
+            depth: the depth of the tree (can also say ply)
+            alpha: the alpha value for alpha-beta pruning
+            beta: the beta value for alpha-beta pruning
+            max_player: whether or not the current player is the maximizing player
+        """
         if depth == 0:
             # base case
             h = state.get_heuristic(color=self.color)
@@ -49,8 +66,10 @@ class AI:
             max_heuristic = -inf
             best_state = state
             
+            # check if there are any forced captures
             fc = state.force_capture()
             if len(fc) > 0:
+                # consider all forced captures
                 for forced_move in fc:
                     child_state = state.deep_copy()
                     
@@ -67,6 +86,7 @@ class AI:
                         # get pruned
                         break
             else:
+                # if there are no forced captures, consider all possible moves and recurse
                 state.get_all_possible_moves()
                 for move in state.possible_moves:
                     child_state = state.deep_copy()
@@ -75,7 +95,7 @@ class AI:
                     
                     heuristic = self.minimax(child_state, depth - 1, alpha, beta, False)
                     max_heuristic = max(max_heuristic, heuristic[0])
-                    best_state = max(best_state, heuristic[1], key=lambda x: x.heuristic)
+                    best_state = max(best_state, heuristic[1], key=lambda x: x.heuristic) # heuristic[1] is the state
                     
                     alpha = max(alpha, heuristic[0])
                     if beta <= alpha:
@@ -87,6 +107,7 @@ class AI:
             min_heuristic = inf
             best_state = state
             
+            # check if there are any forced captures
             fc = state.force_capture()
             if len(fc) > 0:
                 for forced_move in fc:
@@ -105,6 +126,7 @@ class AI:
                         # get pruned
                         break
             else:
+                # if there are no forced captures, consider all possible moves and recurse
                 state.get_all_possible_moves()
                 for move in state.possible_moves:
                     child_state = state.deep_copy()
@@ -113,7 +135,7 @@ class AI:
                     
                     heuristic = self.minimax(child_state, depth - 1, alpha, beta, True)
                     min_heuristic = min(min_heuristic, heuristic[0])
-                    best_state = min(best_state, heuristic[1], key=lambda x: x.heuristic)
+                    best_state = min(best_state, heuristic[1], key=lambda x: x.heuristic) # heuristic[1] is the state
                     
                     beta = min(beta, heuristic[0])
                     if beta <= alpha:
@@ -121,24 +143,4 @@ class AI:
                         break
             best_state.heuristic = min_heuristic
             return (min_heuristic, best_state)
-    
-    def get_best_max_move(self):
-        pass
-    
-    def get_best_min_move(self):
-        pass
-    
-   
-# if __name__ == "__main__":
-#     board = Board()
-#     ai = AI(settings.TAN)
-#     board.draw(WINDOW)
-#     pygame.display.flip()
-    
-#     ai.minimax(board, 3, -inf, inf, True)[1]
-    
-     
-        
-    
-    
     

@@ -13,16 +13,18 @@ class Board:
         self.possible_moves = []
         
         self.current_player = settings.TAN
-        self.just_jumped = False
+        self.just_jumped = False # if the player just captured a piece
         
-        # variables for AI stuff
+        # variables for AI stuff (unused outside this file)
         self.created_kings_count = 0
         
         self.captured_opponent_kings_count = 0
         self.captured_opponent_pieces_count = 0
         
+        # a board's heuristic value
         self.heuristic: float = -inf
         
+        # variables for forced capture
         self.force = False
         
         for y in range(settings.SIZE):
@@ -77,6 +79,10 @@ class Board:
         return board_copy
     
     def game_over(self) -> bool:    
+        """
+        If there is one piece left and it cannot move, the game is over and you lose.
+        If there are no pieces remaining, you lose.
+        """
         one = self.one_piece_left(self.current_player)    
         
         for square in self.squares:
@@ -113,6 +119,8 @@ class Board:
         
         num_opponent_king_row = 0
         
+        # yes, it's a big loop
+        # loops over all squares and counts pieces on both sides
         for square in self.squares:
             if square.has_piece():
                 if square.piece.color == color:
@@ -141,11 +149,14 @@ class Board:
             return num_opponent_pieces - num_pieces * 3
         
         heuristic = 0
+        
+        # positive weights for our pieces
         heuristic += num_pieces * 2
         heuristic += num_kings * 4
         heuristic += num_center * 3.5
         heuristic += num_king_center * 3
         
+        # negative weights for opponent pieces
         heuristic -= num_opponent_pieces * 2
         heuristic -= num_opponent_kings * 5
         heuristic -= num_opponent_center * 3.5
@@ -157,12 +168,19 @@ class Board:
         return heuristic
     
     def get_all_possible_moves(self):
+        """
+        Calculates every move for the current player.
+        """
         for square in self.squares:
             if square.has_piece() and square.piece.color == self.current_player:
                 self.force = False
                 self.calculate_possible_moves(currentSquare=(square, square, square))
                 
     def force_capture(self) -> List[Tuple[bool, Square, Square]]:
+        """
+        Returns a list of all possible forced captures. This will maintain the starting 
+        `possible_moves` list.
+        """
         temp = []
         for move in self.possible_moves:
             temp.append(move)
@@ -183,12 +201,21 @@ class Board:
         return []
 
     def select_square(self, x = None, y = None, square = None, force = False, force_moves = []):
+        """Uses coordinates (ideally) to highlight a square and calculate/highlight possible moves.
+
+        Args:
+            x (float, optional): x coordinate of where the user clicked. Defaults to None.
+            y (float, optional): y coordinate of where the user clicked. Defaults to None.
+            square (Square, optional): Optional interface to provide a square if you already have its object. Defaults to None.
+            force (bool, optional): You can provide this if you wish to force a capture. This may have unintended side effects. Defaults to False.
+            force_moves (list, optional): A list of moves. Defaults to [].
+        """
         if square == None:
             square = self.get_square(x, y)
         if self.selected_square == None:
             if force_moves != []:
                 for move in force_moves:
-                    if move[1] == square:
+                    if move[1] == square: # if the clicked square is in the list of forced moves
                         self.selected_square = square
                         self.selected_square.highlight = True
                         self.force = True
@@ -204,6 +231,7 @@ class Board:
                 for square in self.possible_moves:
                     square[0].highlight = True
         else:
+            # if the user clicks on the same square, deselect it
             if square == self.selected_square:
                 square.highlight = False
                 self.selected_square = None
@@ -214,6 +242,9 @@ class Board:
                 self.possible_moves = []
     
     def calculate_possible_moves(self, currentSquare: Tuple[Square, Square, Square]):
+        """
+        Calculates all possible moves for a provided square.
+        """
         if self.current_player == settings.TAN:
             self.add_moves_up(currentSquare)
             if currentSquare[0].piece.king:
@@ -225,6 +256,9 @@ class Board:
     
     
     def add_moves_up(self, currentSquare: Tuple[Square, Square, Square]):
+        """
+        Add all possible moves to `possible_moves` for a tan (or king) piece moving up the board.
+        """
         for i in range(-2, 3, 4):
             targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y - 2)
             jumpedSquare = self.get_square_by_index(currentSquare[0].x + i // 2, currentSquare[0].y - 1)
@@ -234,6 +268,7 @@ class Board:
                     self.possible_moves.append((targetSquare, jumpedSquare, currentSquare[2]))
                     self.force = True
         
+        # if we added a forced move, don't add any other moves
         if not self.just_jumped and not self.force:
             for i in range(-1, 2, 2):
                 targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y - 1)
@@ -243,6 +278,9 @@ class Board:
         
         
     def add_moves_down(self, currentSquare: Tuple[Square, Square, Square]):
+        """
+        Add all possible moves to `possible_moves` for a red (or king) piece moving down the board.
+        """
         for i in range(-2, 3, 4):
             targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y + 2)
             jumpedSquare = self.get_square_by_index(currentSquare[0].x + i // 2, currentSquare[0].y + 1)
@@ -252,6 +290,7 @@ class Board:
                     self.possible_moves.append((targetSquare, jumpedSquare, currentSquare[2]))
                     self.force = True
         
+        # if we added a forced move, don't add any other moves
         if not self.just_jumped and not self.force:
             for i in range(-1, 2, 2):
                 targetSquare = self.get_square_by_index(currentSquare[0].x + i, currentSquare[0].y + 1)
@@ -261,6 +300,11 @@ class Board:
 
     
     def player_make_move(self, x = None, y = None, x_index = None, y_index = None, square = None, ai = False):
+        """Takes coordinates of where the user clicked and moves the piece if it is a valid move. Uses `possible_moves` to determine if the move is valid.
+        
+        Note: this method was original modified from the original version to allow for the AI to make moves.
+        This turned out to be a mistake, but I'm too scared to change it back.
+        """
         if square == None and ai == False:
             square = self.get_square(x, y)
         if x_index != None and y_index != None:
@@ -316,6 +360,7 @@ class Board:
                         possible_move[0].highlight = False
                     self.possible_moves = []
                     
+                    # if we just jumped, check for more jumps. Repeat until no more jumps are possible
                     if self.just_jumped:
                         self.calculate_possible_moves(currentSquare=(square, square, square))
                         if len(self.possible_moves) > 0:
@@ -333,6 +378,10 @@ class Board:
                     self.current_player = settings.RED if self.current_player == settings.TAN else settings.TAN     
                     
     def ai_make_move(self, initial_x_coord, initial_y_coord, target_x_index, target_y_index, force_moves = []):
+        """
+        This is essentially a refined version of the original `player_make_move` method.
+        We are intentional about using the correct memory references.
+        """
         self.selected_square = None
         
         if force_moves != []:
@@ -343,6 +392,7 @@ class Board:
         
         if target and self.selected_square:
             found = None
+            # find the move in the list of possible moves
             for possible_move in self.possible_moves:
                 if target == possible_move[0]:
                     found = possible_move
@@ -371,10 +421,12 @@ class Board:
                     target.piece.king = True
                     self.created_kings_count += 1
                     
+                # reset possible moves
                 for possible_move in self.possible_moves:
                     possible_move[0].highlight = False
                 self.possible_moves = []
                 
+                # if we just jumped, check for more jumps. Repeat until no more jumps are possible
                 if self.just_jumped:
                     self.calculate_possible_moves(currentSquare=(target, target, target))
                     if len(self.possible_moves) > 0:
@@ -384,14 +436,21 @@ class Board:
                     else:
                         self.just_jumped = False
                 
+                # change player
                 self.current_player = settings.RED if self.current_player == settings.TAN else settings.TAN                    
     
     def get_square(self, x, y):
+        """
+        Returns the square object at the given x and y coordinates.
+        """
         x = int(x // settings.SQUARE_SIZE)
         y = int(y // settings.SQUARE_SIZE)
         return self.squares[x + y * settings.SIZE]
     
     def get_square_by_index(self, x, y) -> Square | None:
+        """
+        Returns the square object at the given x and y indices.
+        """
         if x < 0 or y < 0 or x >= settings.SIZE or y >= settings.SIZE:
             return None
         return self.squares[x + y * settings.SIZE]
