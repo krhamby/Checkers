@@ -33,6 +33,8 @@ while running:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mouse = pygame.mouse.get_pos()  
+                    if mouse[1] >= settings.WIDTH:
+                        break
                     fc = []
                     if board.selected_square == None: 
                         fc = board.force_capture()
@@ -49,7 +51,9 @@ while running:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and board.current_player == settings.TAN:
-                    mouse = pygame.mouse.get_pos()  
+                    mouse = pygame.mouse.get_pos() 
+                    if mouse[1] >= settings.WIDTH:
+                        break
                     fc = []
                     if board.selected_square == None: 
                         fc = board.force_capture()
