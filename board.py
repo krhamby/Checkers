@@ -82,6 +82,13 @@ class Board:
                 return False
         return True
     
+    def one_piece_left(self, color) -> bool:
+        count = 0
+        for square in self.squares:
+            if square.has_piece() and square.piece.color == color:
+                count += 1
+        return count == 1
+    
     def get_heuristic(self, color) -> float:
         # do calculations here based on board
         num_pieces = 0

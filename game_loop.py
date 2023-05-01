@@ -23,6 +23,8 @@ turn = True
 
 ai, ai_2 = AI(settings.TAN), AI(settings.RED)
 
+game_draw = False
+
 while running:
     if not board.game_over():
         if settings.GAME_MODE == settings.GameMode.TWO_PLAYER:
@@ -120,6 +122,10 @@ while running:
                         
                         board = output[1]
                         
+                        if output[0] == inf or output[0] == -inf:
+                            print("Draw")
+                            game_draw = True
+                        
                     turn = False
                 else:
                     fc = board.force_capture()
@@ -146,6 +152,10 @@ while running:
                             print("Heuristic: " + str(output[0]))
                             
                         board = output[1]
+                        
+                        if output[0] == inf or output[0] == -inf:
+                            print("Draw")
+                            game_draw = True
                     
                     turn = True
         
@@ -158,13 +168,16 @@ while running:
         else:
             footer.draw_winner(WINDOW, "Tan")
     
+    if game_draw:
+        footer.draw_draw(WINDOW)
+    
     pygame.display.flip()
     CLOCK.tick(60)
     
     if settings.GAME_MODE == settings.GameMode.TWO_PLAYER_AI:
         sleep(0.5)
     
-    if board.game_over():
+    if board.game_over() or game_draw:
         sleep(5)
         running = False
 

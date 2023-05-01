@@ -21,3 +21,10 @@ class Footer:
         text_rect = text.get_rect()
         text_rect.center = (int(settings.WIDTH / 2), int(settings.WIDTH + settings.FOOTER_HEIGHT / 2))
         window.blit(text, text_rect)
+        
+    def draw_draw(self, window):
+        pygame.draw.rect(window, settings.BLACK, (0, settings.WIDTH, settings.WIDTH, int(settings.FOOTER_HEIGHT)))
+        text = self.font.render(f"Draw", True, settings.WHITE)
+        text_rect = text.get_rect()
+        text_rect.center = (int(settings.WIDTH / 2), int(settings.WIDTH + settings.FOOTER_HEIGHT / 2))
+        window.blit(text, text_rect)
